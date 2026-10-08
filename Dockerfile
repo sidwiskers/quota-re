@@ -14,6 +14,10 @@ WORKDIR /app
 # Copy the source code
 COPY . .
 
+# Restrict Ninja (the C++ build system) to 1 concurrent job to prevent 
+# Out-Of-Memory (OOM) crashes on constrained systems like Cloud Shell.
+ENV SKIA_NINJA_COMMAND="ninja -j 1"
+
 # Build the release binary
 RUN cargo build --release
 
