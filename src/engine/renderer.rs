@@ -72,7 +72,9 @@ pub fn render_sticker(
         let avatar_size = 36.0 * scale;
         let avatar_y = name_y + ((name_height - avatar_size) / 2.0).max(0.0);
         let avatar_rect = Rect::from_xywh(name_x, avatar_y, avatar_size, avatar_size);
-        draw_avatar_image(canvas, avatar.as_ref(), avatar_rect, theme.avatar_border);
+        if let Some(image) = avatar.as_ref() {
+            draw_avatar_image(canvas, image, avatar_rect);
+        }
         name_x += 46.0 * scale;
     }
     layout.name_paragraph.paint(canvas, (name_x, name_y));
@@ -286,8 +288,8 @@ pub fn render_quote(
                     avatar_size,
                 );
                 if let Some(image) = avatar_image.as_ref() {
-                draw_avatar_image(canvas, image, avatar_rect);
-            }
+                    draw_avatar_image(canvas, image, avatar_rect);
+                }
                 avatar_rect.bottom() + 24.0
             } else {
                 card_rect.top() + 48.0
