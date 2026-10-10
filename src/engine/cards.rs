@@ -152,3 +152,29 @@ pub fn render_file_card(
     
     Some(data.as_bytes().to_vec())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{render_audio_card, render_file_card};
+    use crate::fonts::manager::FontManager;
+
+    #[test]
+    fn audio_card_returns_png() {
+        let output = FontManager::with_thread_local(|font_mgr| {
+            render_audio_card(font_mgr, "Track", "Performer", 180, 0.5, None)
+        })
+        .expect("audio card rendering should succeed");
+
+        assert!(output.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]));
+    }
+
+    #[test]
+    fn file_card_returns_png_without_a_thumbnail() {
+        let output = FontManager::with_thread_local(|font_mgr| {
+            render_file_card(font_mgr, "document.pdf", "1.2 MB", "pdf", None)
+        })
+        .expect("file card rendering should succeed");
+
+        assert!(output.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]));
+    }
+}
