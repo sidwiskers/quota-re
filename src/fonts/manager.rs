@@ -114,14 +114,14 @@ fn paragraph_direction(text: &str) -> TextDirection {
                 | 0x10800..=0x10FFF
                 | 0x1E800..=0x1EEFF
         ) {
-            return TextDirection::Rtl;
+            return TextDirection::RTL;
         }
         if character.is_alphabetic() {
-            return TextDirection::Ltr;
+            return TextDirection::LTR;
         }
     }
 
-    TextDirection::Ltr
+    TextDirection::LTR
 }
 
 #[cfg(test)]
@@ -131,13 +131,13 @@ mod tests {
 
     #[test]
     fn detects_common_right_to_left_scripts() {
-        assert_eq!(paragraph_direction("مرحبا بالعالم"), TextDirection::Rtl);
-        assert_eq!(paragraph_direction("שלום"), TextDirection::Rtl);
+        assert_eq!(paragraph_direction("مرحبا بالعالم"), TextDirection::RTL);
+        assert_eq!(paragraph_direction("שלום"), TextDirection::RTL);
     }
 
     #[test]
     fn keeps_latin_text_left_to_right_even_with_leading_punctuation() {
-        assert_eq!(paragraph_direction("— Hello"), TextDirection::Ltr);
-        assert_eq!(paragraph_direction("🙂 Hello مرحبا"), TextDirection::Ltr);
+        assert_eq!(paragraph_direction("— Hello"), TextDirection::LTR);
+        assert_eq!(paragraph_direction("🙂 Hello مرحبا"), TextDirection::LTR);
     }
 }
