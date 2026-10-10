@@ -386,6 +386,34 @@ mod tests {
     }
 
     #[test]
+    fn sticker_renders_avatar_and_reply() {
+        use skia_safe::{Color, EncodedImageFormat, Surface};
+
+        let output = FontManager::with_thread_local(|font_mgr| {
+            let mut avatar_surface =
+                Surface::new_raster_n32_premul((16, 16)).expect("test avatar surface");
+            avatar_surface.canvas().clear(Color::from_rgb(60, 120, 200));
+            let avatar_data = avatar_surface
+                .image_snapshot()
+                .encode_to_data_with_quality(EncodedImageFormat::PNG, 100)
+                .expect("encode test avatar");
+
+            render_sticker(
+                font_mgr,
+                "Siddhartha",
+                "A message with an avatar and a reply",
+                Some(("Original author", "The original message")),
+                &Theme::dark(),
+                Some(avatar_data.as_bytes()),
+            )
+        })
+        .expect("sticker with avatar and reply should render");
+
+        assert_eq!(&output[0..4], b"RIFF");
+        assert_eq!(&output[8..12], b"WEBP");
+    }
+
+    #[test]
     fn all_quote_layouts_render() {
         FontManager::with_thread_local(|font_mgr| {
             for style in [0, 2, 3] {
