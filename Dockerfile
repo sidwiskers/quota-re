@@ -1,8 +1,8 @@
 # Build stage
 FROM rust:bookworm AS builder
 
-# Install dependencies required by Skia to compile
-RUN apt-get update && apt-get install -y \
+# Dependencies required to compile Skia and its native text stack.
+RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
     python3 \
     libfontconfig1-dev \
@@ -11,37 +11,30 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-# Copy the source code
 COPY . .
 
-# Restrict Ninja (the C++ build system) to 1 concurrent job to prevent 
-# Out-Of-Memory (OOM) crashes on constrained systems like Cloud Shell.
+# Keep native Skia compilation bounded on memory-constrained builders.
 ENV SKIA_NINJA_COMMAND="ninja -j 1"
+ENV CARGO_BUILD_JOBS=2
 
-# Build the release binary
 RUN cargo build --release
 
-# Runtime stage (Smaller final image)
+# Runtime stage
 FROM debian:bookworm-slim
 
-# Install runtime dependencies (fontconfig is needed by Skia for text layout)
-RUN apt-get update && apt-get install -y \
-    libfontconfig1 \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    fontconfig \
+    fonts-roboto \
+    fonts-noto-color-emoji \
+    libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-# Copy the compiled binary from the builder stage
 COPY --from=builder /app/target/release/quota-re /app/quota-re
 
-# Expose the API port
 EXPOSE 5000
-
-# Environment variables
 ENV PORT=5000
 ENV RUST_LOG=info
 
-# Run the server
 CMD ["./quota-re"]
