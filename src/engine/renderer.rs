@@ -346,6 +346,26 @@ mod tests {
     }
 
     #[test]
+    fn all_quote_layouts_render() {
+        FontManager::with_thread_local(|font_mgr| {
+            for style in [0, 2, 3] {
+                let output = render_quote(
+                    font_mgr,
+                    "A quote with multiple words",
+                    "Author",
+                    &Theme::dark(),
+                    None,
+                    None,
+                    style,
+                    false,
+                )
+                .expect("supported quote layout should render");
+                assert!(output.starts_with(&[0xFF, 0xD8, 0xFF]));
+            }
+        });
+    }
+
+    #[test]
     fn quote_encoding_matches_requested_format() {
         let (png, jpeg) = FontManager::with_thread_local(|font_mgr| {
             let png = render_quote(
