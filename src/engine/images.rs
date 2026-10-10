@@ -1,4 +1,4 @@
-use skia_safe::{Canvas, Data, Image, Paint, Rect, SrcRectConstraint};
+use skia_safe::{canvas::SrcRectConstraint, Canvas, Data, Image, Paint, Rect};
 
 const MAX_ENCODED_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_IMAGE_SIDE: i32 = 8_192;
