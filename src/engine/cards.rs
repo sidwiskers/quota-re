@@ -1,6 +1,6 @@
 use crate::engine::images::{decode_safe_image, draw_cropped_image};
 use crate::fonts::manager::FontManager;
-use skia_safe::{textlayout::TextAlign, Color, EncodedImageFormat, Paint, Rect, RRect, Surface};
+use skia_safe::{textlayout::TextAlign, Color, EncodedImageFormat, Paint, Point, Rect, RRect, Surface};
 
 pub fn render_audio_card(
     font_mgr: &FontManager,
