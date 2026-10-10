@@ -181,7 +181,7 @@ async fn sticker_handler(
             } else {
                 Theme::dark()
             };
-            let reply = if reply_username.is_empty() {
+            let reply = if reply_username.trim().is_empty() {
                 None
             } else {
                 Some((reply_username.as_str(), reply_message.as_str()))
