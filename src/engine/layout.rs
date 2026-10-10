@@ -35,19 +35,16 @@ impl BubbleLayout {
         let reply_font_size = 17.0 * scale;
 
         let avatar_space = if has_avatar { 46.0 * scale } else { 0.0 };
-        let name_paragraph = font_mgr.build_paragraph(
-            if username.trim().is_empty() { " " } else { username },
+        let username_text = if username.trim().is_empty() { " " } else { username };
+        let name_measure = font_mgr.build_paragraph(
+            username_text,
             name_font_size,
             "Roboto",
             (max_bubble_width - avatar_space).max(1.0),
             theme.username,
             Some(1),
         );
-        let name_width = name_paragraph.max_intrinsic_width();
-        let name_height = name_paragraph
-            .height()
-            .max(name_font_size + 4.0 * scale)
-            .max(if has_avatar { 36.0 * scale } else { 0.0 });
+        let name_width = name_measure.max_intrinsic_width();
 
         // Measure intrinsic message width separately from the final wrapped
         // paragraph, then bound the bubble to the fixed design width.
@@ -64,6 +61,18 @@ impl BubbleLayout {
             .max(content_width + horizontal_padding * 2.0 + 12.0 * scale)
             .min(max_bubble_width);
         let inner_width = (bubble_width - horizontal_padding * 2.0).max(1.0);
+        let name_paragraph = font_mgr.build_paragraph(
+            username_text,
+            name_font_size,
+            "Roboto",
+            (inner_width - avatar_space).max(1.0),
+            theme.username,
+            Some(1),
+        );
+        let name_height = name_paragraph
+            .height()
+            .max(name_font_size + 4.0 * scale)
+            .max(if has_avatar { 36.0 * scale } else { 0.0 });
 
         let msg_paragraph = font_mgr.build_paragraph(
             message,
