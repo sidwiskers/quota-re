@@ -408,9 +408,9 @@ mod tests {
 
     #[test]
     fn quote_format_parser_accepts_only_supported_encodings() {
-        assert_eq!(parse_quote_output_format("png").unwrap(), true);
-        assert_eq!(parse_quote_output_format(" JPG ").unwrap(), false);
-        assert_eq!(parse_quote_output_format("jpeg").unwrap(), false);
+        assert!(parse_quote_output_format("png").unwrap());
+        assert!(!parse_quote_output_format(" JPG ").unwrap());
+        assert!(!parse_quote_output_format("jpeg").unwrap());
         assert_eq!(
             parse_quote_output_format("webp").unwrap_err().0,
             StatusCode::BAD_REQUEST
