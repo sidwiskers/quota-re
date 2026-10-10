@@ -1,6 +1,6 @@
 use crate::engine::images::{decode_safe_image, draw_cropped_image};
 use crate::fonts::manager::FontManager;
-use skia_safe::{Color, EncodedImageFormat, Paint, Rect, RRect, Surface};
+use skia_safe::{textlayout::TextAlign, Color, EncodedImageFormat, Paint, Rect, RRect, Surface};
 
 pub fn render_audio_card(
     font_mgr: &FontManager,
@@ -15,9 +15,11 @@ pub fn render_audio_card(
     
     let mut surface = Surface::new_raster_n32_premul((canvas_w as i32, canvas_h as i32))?;
     let canvas = surface.canvas();
+    canvas.clear(Color::from_argb(0, 0, 0, 0));
 
     // 1. Draw Background (Dark Theme)
     let mut bg_paint = Paint::default();
+    bg_paint.set_anti_alias(true);
     bg_paint.set_color(Color::from_rgb(29, 30, 44));
     let bg_rect = Rect::from_xywh(0.0, 0.0, canvas_w, canvas_h);
     canvas.draw_rrect(RRect::new_rect_xy(bg_rect, 20.0, 20.0), &bg_paint);
@@ -99,9 +101,11 @@ pub fn render_file_card(
     
     let mut surface = Surface::new_raster_n32_premul((canvas_w as i32, canvas_h as i32))?;
     let canvas = surface.canvas();
+    canvas.clear(Color::from_argb(0, 0, 0, 0));
 
     // 1. Draw Background
     let mut bg_paint = Paint::default();
+    bg_paint.set_anti_alias(true);
     bg_paint.set_color(Color::from_rgb(29, 30, 44));
     let bg_rect = Rect::from_xywh(0.0, 0.0, canvas_w, canvas_h);
     canvas.draw_rrect(RRect::new_rect_xy(bg_rect, 20.0, 20.0), &bg_paint);
@@ -127,9 +131,16 @@ pub fn render_file_card(
         canvas.draw_rrect(RRect::new_oval(thumb_rect), &p);
 
         let display_ext = if file_ext.is_empty() { "FILE" } else { file_ext }.to_uppercase();
-        let ext_para = font_mgr.build_paragraph(&display_ext, 28.0, "Roboto", thumb_size - 10.0, Color::WHITE, Some(1));
-
-        let ex = thumb_x + (thumb_size - ext_para.max_intrinsic_width()) / 2.0;
+        let ext_para = font_mgr.build_paragraph_aligned(
+            &display_ext,
+            28.0,
+            "Roboto",
+            thumb_size - 10.0,
+            Color::WHITE,
+            Some(1),
+            TextAlign::Center,
+        );
+        let ex = thumb_x + 5.0;
         let ey = thumb_y + (thumb_size - ext_para.height()) / 2.0;
         ext_para.paint(canvas, (ex, ey));
     }
