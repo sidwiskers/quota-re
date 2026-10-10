@@ -1,35 +1,45 @@
 use skia_safe::{
-    textlayout::{FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle, TypefaceFontProvider},
-    Data, FontMgr, Typeface,
+    textlayout::{
+        FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextAlign, TextStyle,
+    },
+    FontMgr,
 };
-use std::sync::Arc;
+use std::cell::RefCell;
+
+/// Skia's paragraph FontCollection is not Send/Sync in this version.
+/// Keep one instance per blocking-render worker thread instead of sharing it
+/// through Axum application state.
+thread_local! {
+    static THREAD_FONT_MANAGER: RefCell<FontManager> =
+        RefCell::new(FontManager::new());
+}
 
 pub struct FontManager {
-    pub collection: FontCollection,
+    collection: FontCollection,
 }
 
 impl FontManager {
-    /// Initializes the Skia FontCollection. 
-    /// Unlike PIL which requires manual per-character script detection and manual font loading,
-    /// Skia's textlayout engine handles HarfBuzz shaping, bidi, and font fallback automatically.
-    pub fn new() -> Self {
-        let mut font_provider = TypefaceFontProvider::new();
+    fn new() -> Self {
         let mut collection = FontCollection::new();
 
-        // Load the system default font manager to handle standard emojis (Noto Color Emoji)
-        // and CJK / Arabic fallbacks seamlessly.
-        let default_mgr = FontMgr::new();
-        collection.set_default_font_manager(default_mgr, None);
-
-        // TODO: In production, we will load the exact "Roboto" TTF files from disk or memory 
-        // using font_provider.register_typeface(Typeface::from_data(...)) to match QuotLy exactly.
-        
-        collection.set_asset_font_manager(Some(font_provider.clone().into()));
+        // Fontconfig supplies deterministic system-installed Roboto and Noto
+        // Color Emoji fonts in the Docker runtime, with system fallback for
+        // other scripts and characters.
+        collection.set_default_font_manager(FontMgr::new(), None);
 
         Self { collection }
     }
 
-    /// Helper to create a fully shaped paragraph ready for measurement and rendering
+    /// Run a rendering operation with the font manager owned by this thread.
+    /// The manager and all Skia paragraph objects remain on the same thread.
+    pub fn with_thread_local<R>(f: impl FnOnce(&FontManager) -> R) -> R {
+        THREAD_FONT_MANAGER.with(|manager| {
+            let manager = manager.borrow();
+            f(&manager)
+        })
+    }
+
+    /// Create a shaped paragraph and lay it out at the requested width.
     pub fn build_paragraph(
         &self,
         text: &str,
@@ -39,6 +49,28 @@ impl FontManager {
         color: skia_safe::Color,
         max_lines: Option<usize>,
     ) -> Paragraph {
+        self.build_paragraph_aligned(
+            text,
+            font_size,
+            font_family,
+            max_width,
+            color,
+            max_lines,
+            TextAlign::Start,
+        )
+    }
+
+    /// The same paragraph builder with explicit alignment for quote layouts.
+    pub fn build_paragraph_aligned(
+        &self,
+        text: &str,
+        font_size: f32,
+        font_family: &str,
+        max_width: f32,
+        color: skia_safe::Color,
+        max_lines: Option<usize>,
+        alignment: TextAlign,
+    ) -> Paragraph {
         let mut text_style = TextStyle::new();
         text_style.set_color(color);
         text_style.set_font_size(font_size);
@@ -46,6 +78,7 @@ impl FontManager {
 
         let mut paragraph_style = ParagraphStyle::new();
         paragraph_style.set_text_style(&text_style);
+        paragraph_style.set_text_align(alignment);
         if let Some(lines) = max_lines {
             paragraph_style.set_max_lines(lines);
             paragraph_style.set_ellipsis("…");
@@ -54,11 +87,9 @@ impl FontManager {
         let mut builder = ParagraphBuilder::new(&paragraph_style, &self.collection);
         builder.push_style(&text_style);
         builder.add_text(text);
-        
+
         let mut paragraph = builder.build();
-        // Layout the paragraph with the given constraints
-        paragraph.layout(max_width);
-        
+        paragraph.layout(max_width.max(1.0));
         paragraph
     }
 }
