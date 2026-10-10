@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     clang \
     python3 \
     libfontconfig1-dev \
+    libfreetype6-dev \
     ninja-build \
     && rm -rf /var/lib/apt/lists/*
 
