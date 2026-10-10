@@ -157,16 +157,19 @@ pub fn render_quote(
         return None;
     }
 
+    let avatar_image = avatar_bytes.and_then(decode_safe_image);
+    let has_avatar = avatar_image.is_some();
     let canvas_width = 1_200.0;
     let padding = 50.0;
     let horizontal = quote_style == 0;
     let avatar_size = match quote_style {
-        0 => 400.0,
-        2 => 300.0,
-        _ => 128.0,
+        0 if has_avatar => 400.0,
+        2 if has_avatar => 300.0,
+        3 if has_avatar => 128.0,
+        _ => 0.0,
     };
     let text_width = if horizontal {
-        canvas_width - padding * 2.0 - avatar_size - padding
+        canvas_width - padding * 2.0 - (if has_avatar { avatar_size + padding } else { 0.0 })
     } else if quote_style == 2 {
         canvas_width - 140.0
     } else {
@@ -226,7 +229,9 @@ pub fn render_quote(
                 avatar_size,
                 avatar_size,
             );
-            draw_avatar(canvas, avatar_bytes, avatar_rect, theme.avatar_border);
+            if let Some(image) = avatar_image.as_ref() {
+                draw_avatar_image(canvas, image, avatar_rect);
+            }
 
             let text_x = padding;
             let content_y = ((canvas_height - content_height) / 2.0).max(padding);
@@ -244,7 +249,9 @@ pub fn render_quote(
                 avatar_size,
                 avatar_size,
             );
-            draw_avatar(canvas, avatar_bytes, avatar_rect, theme.avatar_border);
+            if let Some(image) = avatar_image.as_ref() {
+                draw_avatar_image(canvas, image, avatar_rect);
+            }
 
             let text_x = (canvas_width - text_width) / 2.0;
             let text_y = avatar_rect.bottom() + 45.0;
@@ -271,14 +278,16 @@ pub fn render_quote(
             );
 
             let text_x = (canvas_width - text_width) / 2.0;
-            let text_y = if avatar_bytes.is_some() {
+            let text_y = if has_avatar {
                 let avatar_rect = Rect::from_xywh(
                     (canvas_width - avatar_size) / 2.0,
                     card_rect.top() + 28.0,
                     avatar_size,
                     avatar_size,
                 );
-                draw_avatar(canvas, avatar_bytes, avatar_rect, theme.avatar_border);
+                if let Some(image) = avatar_image.as_ref() {
+                draw_avatar_image(canvas, image, avatar_rect);
+            }
                 avatar_rect.bottom() + 24.0
             } else {
                 card_rect.top() + 48.0
@@ -328,36 +337,12 @@ fn draw_background(canvas: &Canvas, bytes: Option<&[u8]>, width: f32, height: f3
     canvas.draw_rect(bounds, &dimming);
 }
 
-fn draw_avatar(
-    canvas: &Canvas,
-    bytes: Option<&[u8]>,
-    destination: Rect,
-    fallback_color: Color,
-) {
-    let image = bytes.and_then(decode_safe_image);
-    draw_avatar_image(canvas, image.as_ref(), destination, fallback_color);
-}
-
-fn draw_avatar_image(
-    canvas: &Canvas,
-    image: Option<&skia_safe::Image>,
-    destination: Rect,
-    fallback_color: Color,
-) {
+fn draw_avatar_image(canvas: &Canvas, image: &skia_safe::Image, destination: Rect) {
     canvas.save();
     canvas.clip_rrect(RRect::new_oval(destination), None, true);
-
-    if let Some(image) = image {
-        let mut paint = Paint::default();
-        paint.set_anti_alias(true);
-        draw_cropped_image(canvas, image, destination, &paint);
-    } else {
-        let mut paint = Paint::default();
-        paint.set_anti_alias(true);
-        paint.set_color(fallback_color);
-        canvas.draw_rect(destination, &paint);
-    }
-
+    let mut paint = Paint::default();
+    paint.set_anti_alias(true);
+    draw_cropped_image(canvas, image, destination, &paint);
     canvas.restore();
 }
 
