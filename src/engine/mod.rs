@@ -2,3 +2,4 @@ pub mod layout;
 pub mod renderer;
 pub mod theme;
 pub mod cards;
+pub mod images;
