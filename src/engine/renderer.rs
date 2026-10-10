@@ -5,7 +5,7 @@ use crate::engine::{
 };
 use crate::fonts::manager::FontManager;
 use skia_safe::{
-    textlayout::TextAlign, Canvas, Color, EncodedImageFormat, Image, Paint, Rect, RRect, Surface,
+    textlayout::TextAlign, Canvas, Color, EncodedImageFormat, Paint, Rect, RRect, Surface,
     TileMode,
 };
 
@@ -190,7 +190,7 @@ pub fn render_quote(
     let canvas_height = match quote_style {
         0 => (content_height + padding * 2.0).max(600.0).min(MAX_QUOTE_HEIGHT),
         2 => (content_height + avatar_size + 170.0).max(900.0).min(MAX_QUOTE_HEIGHT),
-        _ => (content_height + 270.0).max(700.0).min(MAX_QUOTE_HEIGHT),
+        _ => (content_height + 320.0).max(700.0).min(MAX_QUOTE_HEIGHT),
     };
 
     let mut surface = Surface::new_raster_n32_premul((
