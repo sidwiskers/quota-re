@@ -112,6 +112,17 @@ fn parse_quote_output_format(value: &str) -> Result<bool, ApiError> {
     }
 }
 
+fn validate_progress(progress: f32) -> Result<f32, ApiError> {
+    if !progress.is_finite() || !(0.0..=1.0).contains(&progress) {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "progress must be a finite number between 0 and 1".to_string(),
+        ));
+    }
+
+    Ok(progress)
+}
+
 async fn sticker_handler(
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, ApiError> {
@@ -328,13 +339,7 @@ async fn audio_card_handler(
             "duration must be between 0 and 86400 seconds".to_string(),
         ));
     }
-    if !progress.is_finite() {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            "progress must be a finite number between 0 and 1".to_string(),
-        ));
-    }
-    progress = progress.clamp(0.0, 1.0);
+    progress = validate_progress(progress)?;
 
     let img_data = render_blocking(move || {
         FontManager::with_thread_local(|font_mgr| {
@@ -415,6 +420,19 @@ mod tests {
             parse_quote_output_format("webp").unwrap_err().0,
             StatusCode::BAD_REQUEST
         );
+    }
+
+    #[test]
+    fn progress_is_finite_and_within_the_documented_range() {
+        use super::validate_progress;
+
+        assert_eq!(validate_progress(0.0).unwrap(), 0.0);
+        assert_eq!(validate_progress(1.0).unwrap(), 1.0);
+        assert!(validate_progress(0.5).is_ok());
+        assert_eq!(validate_progress(-0.1).unwrap_err().0, StatusCode::BAD_REQUEST);
+        assert_eq!(validate_progress(1.1).unwrap_err().0, StatusCode::BAD_REQUEST);
+        assert_eq!(validate_progress(f32::NAN).unwrap_err().0, StatusCode::BAD_REQUEST);
+        assert_eq!(validate_progress(f32::INFINITY).unwrap_err().0, StatusCode::BAD_REQUEST);
     }
 
     #[test]
