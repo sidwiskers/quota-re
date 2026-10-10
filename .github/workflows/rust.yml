@@ -5,6 +5,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  SKIA_NINJA_COMMAND: "ninja -j 2"
 
 jobs:
   build:
@@ -13,10 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Skia Dependencies
+      - name: Cache Rust and Skia build outputs
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Skia and font dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang python3 libfontconfig1-dev libfreetype6-dev ninja-build
+          sudo apt-get install -y --no-install-recommends clang python3 libfontconfig1-dev libfreetype6-dev ninja-build fontconfig fonts-roboto fonts-noto-core fonts-noto-color-emoji
 
       - name: Build
         run: cargo build --verbose
