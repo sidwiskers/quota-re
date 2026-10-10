@@ -64,7 +64,8 @@ pub fn render_sticker(
     let name_height = layout
         .name_paragraph
         .height()
-        .max(29.0 * scale);
+        .max(29.0 * scale)
+        .max(if has_avatar { 36.0 * scale } else { 0.0 });
     let name_y = top + vertical_padding;
     let mut name_x = left + horizontal_padding;
     if has_avatar {
