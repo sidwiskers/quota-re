@@ -9,13 +9,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfontconfig1-dev \
     libfreetype6-dev \
     ninja-build \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && printf '#!/bin/sh\\nexec /usr/bin/ninja -j 1 "$@"\\n' > /usr/local/bin/ninja-quota-re \
+    && chmod 0755 /usr/local/bin/ninja-quota-re
 
 WORKDIR /app
 COPY . .
 
 # Keep native Skia compilation bounded on memory-constrained builders.
-ENV SKIA_NINJA_COMMAND="ninja -j 1"
+ENV SKIA_NINJA_COMMAND=/usr/local/bin/ninja-quota-re
 ENV CARGO_BUILD_JOBS=2
 
 RUN cargo build --release
