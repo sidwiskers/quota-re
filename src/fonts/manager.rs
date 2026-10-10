@@ -1,8 +1,7 @@
 use crate::fonts::fallback::paragraph_direction;
 use skia_safe::{
     textlayout::{
-        FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextAlign, TextDirection,
-        TextStyle,
+        FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextAlign, TextStyle,
     },
     FontMgr,
 };
