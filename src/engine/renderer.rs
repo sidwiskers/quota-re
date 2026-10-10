@@ -24,11 +24,15 @@ pub fn render_sticker(
         return None;
     }
 
-    let mut layout = BubbleLayout::calculate(font_mgr, username, message, reply, theme, 1.0);
+    let avatar = avatar_bytes.and_then(decode_safe_image);
+    let has_avatar = avatar.is_some();
+    let mut layout =
+        BubbleLayout::calculate(font_mgr, username, message, reply, theme, 1.0, has_avatar);
     let available_height = 464.0;
     if layout.bubble_height > available_height {
         let scale = (available_height / layout.bubble_height).clamp(0.25, 1.0);
-        layout = BubbleLayout::calculate(font_mgr, username, message, reply, theme, scale);
+        layout =
+            BubbleLayout::calculate(font_mgr, username, message, reply, theme, scale, has_avatar);
     }
 
     let mut surface = Surface::new_raster_n32_premul((STICKER_SIDE, STICKER_SIDE))?;
@@ -62,9 +66,15 @@ pub fn render_sticker(
         .height()
         .max(29.0 * scale);
     let name_y = top + vertical_padding;
-    layout
-        .name_paragraph
-        .paint(canvas, (left + horizontal_padding, name_y));
+    let mut name_x = left + horizontal_padding;
+    if has_avatar {
+        let avatar_size = 36.0 * scale;
+        let avatar_y = name_y + ((name_height - avatar_size) / 2.0).max(0.0);
+        let avatar_rect = Rect::from_xywh(name_x, avatar_y, avatar_size, avatar_size);
+        draw_avatar_image(canvas, avatar.as_ref(), avatar_rect, theme.avatar_border);
+        name_x += 46.0 * scale;
+    }
+    layout.name_paragraph.paint(canvas, (name_x, name_y));
 
     let mut content_y = name_y + name_height + 6.0 * scale;
 
@@ -323,13 +333,23 @@ fn draw_avatar(
     destination: Rect,
     fallback_color: Color,
 ) {
+    let image = bytes.and_then(decode_safe_image);
+    draw_avatar_image(canvas, image.as_ref(), destination, fallback_color);
+}
+
+fn draw_avatar_image(
+    canvas: &Canvas,
+    image: Option<&skia_safe::Image>,
+    destination: Rect,
+    fallback_color: Color,
+) {
     canvas.save();
     canvas.clip_rrect(RRect::new_oval(destination), None, true);
 
-    if let Some(image) = bytes.and_then(decode_safe_image) {
+    if let Some(image) = image {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
-        draw_cropped_image(canvas, &image, destination, &paint);
+        draw_cropped_image(canvas, image, destination, &paint);
     } else {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
