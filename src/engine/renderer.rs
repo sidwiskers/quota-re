@@ -50,6 +50,12 @@ pub fn render_sticker(
         RRect::new_rect_xy(bubble_rect, 24.0 * scale, 24.0 * scale),
         &bubble_paint,
     );
+    canvas.save();
+    canvas.clip_rrect(
+        RRect::new_rect_xy(bubble_rect, 24.0 * scale, 24.0 * scale),
+        None,
+        true,
+    );
 
     let name_height = layout
         .name_paragraph
@@ -119,6 +125,7 @@ pub fn render_sticker(
     layout
         .msg_paragraph
         .paint(canvas, (left + horizontal_padding, content_y));
+    canvas.restore();
 
     let snapshot = surface.image_snapshot();
     let data = snapshot.encode_to_data_with_quality(EncodedImageFormat::WEBP, 90)?;
@@ -212,8 +219,12 @@ pub fn render_quote(
 
             let text_x = padding;
             let content_y = ((canvas_height - content_height) / 2.0).max(padding);
+            let text_rect = Rect::from_xywh(text_x, content_y, text_width, content_height);
+            canvas.save();
+            canvas.clip_rect(text_rect, None, true);
             quote_paragraph.paint(canvas, (text_x, content_y));
             author_paragraph.paint(canvas, (text_x, content_y + quote_height + 16.0));
+            canvas.restore();
         }
         2 => {
             let avatar_rect = Rect::from_xywh(
@@ -226,8 +237,12 @@ pub fn render_quote(
 
             let text_x = (canvas_width - text_width) / 2.0;
             let text_y = avatar_rect.bottom() + 45.0;
+            let text_rect = Rect::from_xywh(text_x, text_y, text_width, content_height);
+            canvas.save();
+            canvas.clip_rect(text_rect, None, true);
             quote_paragraph.paint(canvas, (text_x, text_y));
             author_paragraph.paint(canvas, (text_x, text_y + quote_height + 16.0));
+            canvas.restore();
         }
         3 => {
             let card_rect = Rect::from_xywh(
@@ -257,8 +272,12 @@ pub fn render_quote(
             } else {
                 card_rect.top() + 48.0
             };
+            let text_rect = Rect::from_xywh(text_x, text_y, text_width, content_height);
+            canvas.save();
+            canvas.clip_rect(text_rect, None, true);
             quote_paragraph.paint(canvas, (text_x, text_y));
             author_paragraph.paint(canvas, (text_x, text_y + quote_height + 16.0));
+            canvas.restore();
         }
         _ => return None,
     }
