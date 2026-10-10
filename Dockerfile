@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     ninja-build \
     && rm -rf /var/lib/apt/lists/* \
-    && printf '#!/bin/sh\\nexec /usr/bin/ninja -j 1 "$@"\\n' > /usr/local/bin/ninja-quota-re \
+    && printf '#!/bin/sh\nexec /usr/bin/ninja -j 1 "$@"\n' > /usr/local/bin/ninja-quota-re \
     && chmod 0755 /usr/local/bin/ninja-quota-re
 
 WORKDIR /app
