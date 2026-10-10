@@ -37,7 +37,7 @@ pub fn render_sticker(
 
     let left = (STICKER_SIDE as f32 - layout.bubble_width) / 2.0;
     let top = (STICKER_SIDE as f32 - layout.bubble_height) / 2.0;
-    let scale = layout.bubble_width / 440.0;
+    let scale = layout.render_scale;
     let horizontal_padding = 18.0 * scale;
     let vertical_padding = 13.0 * scale;
     let inner_width = (layout.bubble_width - horizontal_padding * 2.0).max(1.0);
