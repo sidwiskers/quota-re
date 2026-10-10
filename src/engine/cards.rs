@@ -1,7 +1,6 @@
+use crate::engine::images::{decode_safe_image, draw_cropped_image};
 use crate::fonts::manager::FontManager;
-use skia_safe::{
-    textlayout::Paragraph, BlendMode, Color, Data, EncodedImageFormat, Image, Paint, Path, Point, RRect, Rect, Shader, Surface, TileMode
-};
+use skia_safe::{Color, EncodedImageFormat, Paint, Point, Rect, RRect, Surface};
 
 pub fn render_audio_card(
     font_mgr: &FontManager,
@@ -29,30 +28,17 @@ pub fn render_audio_card(
     let thumb_y = 40.0;
     let thumb_rect = Rect::from_xywh(thumb_x, thumb_y, thumb_size, thumb_size);
 
-    if let Some(bytes) = thumb_bytes {
-        if let Some(image) = Image::from_encoded(Data::new_copy(bytes)) {
-            canvas.save();
-            canvas.clip_rrect(RRect::new_rect_xy(thumb_rect, 15.0, 15.0), None, true);
-            
-            let mut img_paint = Paint::default();
-            img_paint.set_anti_alias(true);
-            
-            // Center crop scale
-            let src_w = image.width() as f32;
-            let src_h = image.height() as f32;
-            let scale = (thumb_size / src_w).max(thumb_size / src_h);
-            let nw = src_w * scale;
-            let nh = src_h * scale;
-            let left = (nw - thumb_size) / 2.0;
-            let top = (nh - thumb_size) / 2.0;
+    if let Some(image) = thumb_bytes.and_then(decode_safe_image) {
+        canvas.save();
+        canvas.clip_rrect(RRect::new_rect_xy(thumb_rect, 15.0, 15.0), None, true);
 
-            canvas.translate((thumb_x - left, thumb_y - top));
-            canvas.scale((scale, scale));
-            canvas.draw_image(image, (0, 0), Some(&img_paint));
-            canvas.restore();
-        }
+        let mut img_paint = Paint::default();
+        img_paint.set_anti_alias(true);
+        draw_cropped_image(canvas, &image, thumb_rect, &img_paint);
+        canvas.restore();
     } else {
         let mut p = Paint::default();
+        p.set_anti_alias(true);
         p.set_color(Color::from_rgb(60, 65, 75));
         canvas.draw_rrect(RRect::new_rect_xy(thumb_rect, 15.0, 15.0), &p);
     }
@@ -126,35 +112,23 @@ pub fn render_file_card(
     let thumb_y = 40.0;
     let thumb_rect = Rect::from_xywh(thumb_x, thumb_y, thumb_size, thumb_size);
 
-    if let Some(bytes) = thumb_bytes {
-        if let Some(image) = Image::from_encoded(Data::new_copy(bytes)) {
-            canvas.save();
-            canvas.clip_rrect(RRect::new_oval(thumb_rect), None, true); // Circle clip for files
-            
-            let mut img_paint = Paint::default();
-            img_paint.set_anti_alias(true);
-            
-            let src_w = image.width() as f32;
-            let src_h = image.height() as f32;
-            let scale = (thumb_size / src_w).max(thumb_size / src_h);
-            let nw = src_w * scale;
-            let nh = src_h * scale;
-            let left = (nw - thumb_size) / 2.0;
-            let top = (nh - thumb_size) / 2.0;
+    if let Some(image) = thumb_bytes.and_then(decode_safe_image) {
+        canvas.save();
+        canvas.clip_rrect(RRect::new_oval(thumb_rect), None, true);
 
-            canvas.translate((thumb_x - left, thumb_y - top));
-            canvas.scale((scale, scale));
-            canvas.draw_image(image, (0, 0), Some(&img_paint));
-            canvas.restore();
-        }
+        let mut img_paint = Paint::default();
+        img_paint.set_anti_alias(true);
+        draw_cropped_image(canvas, &image, thumb_rect, &img_paint);
+        canvas.restore();
     } else {
         let mut p = Paint::default();
+        p.set_anti_alias(true);
         p.set_color(Color::from_rgb(100, 190, 255)); // Telegram File Blue
-        canvas.draw_circle(Point::new(thumb_x + thumb_size / 2.0, thumb_y + thumb_size / 2.0), thumb_size / 2.0, &p);
+        canvas.draw_rrect(RRect::new_oval(thumb_rect), &p);
 
         let display_ext = if file_ext.is_empty() { "FILE" } else { file_ext }.to_uppercase();
         let ext_para = font_mgr.build_paragraph(&display_ext, 28.0, "Roboto", thumb_size - 10.0, Color::WHITE, Some(1));
-        
+
         let ex = thumb_x + (thumb_size - ext_para.max_intrinsic_width()) / 2.0;
         let ey = thumb_y + (thumb_size - ext_para.height()) / 2.0;
         ext_para.paint(canvas, (ex, ey));
