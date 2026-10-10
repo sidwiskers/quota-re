@@ -20,7 +20,7 @@ jobs:
       - name: Install Skia and font dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends clang python3 libfontconfig1-dev libfreetype6-dev ninja-build fontconfig fonts-roboto fonts-noto-core fonts-noto-color-emoji
+          sudo apt-get install -y --no-install-recommends clang libclang-dev python3 libfontconfig1-dev libfreetype6-dev ninja-build fontconfig fonts-roboto fonts-noto-core fonts-noto-color-emoji
 
       - name: Build
         run: cargo build --verbose
