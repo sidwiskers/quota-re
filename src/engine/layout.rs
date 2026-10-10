@@ -4,6 +4,7 @@ use skia_safe::textlayout::Paragraph;
 
 /// Calculated dimensions and shaped text for a QuotLy-style sticker bubble.
 pub struct BubbleLayout {
+    pub render_scale: f32,
     pub bubble_width: f32,
     pub bubble_height: f32,
     pub name_paragraph: Paragraph,
@@ -108,6 +109,7 @@ impl BubbleLayout {
             .max(60.0 * scale);
 
         Self {
+            render_scale: scale,
             bubble_width,
             bubble_height,
             name_paragraph,
