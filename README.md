@@ -68,11 +68,11 @@ Returns `image/png`.
 
 ## Run locally
 
-Install Rust (stable), a C++ build toolchain, Clang, Ninja, FreeType, Fontconfig, Roboto, and Noto Color Emoji. On Debian/Ubuntu:
+Install Rust (stable), a C++ build toolchain, Clang, Ninja, FreeType, Fontconfig, Roboto, Noto Core, and Noto Color Emoji. On Debian/Ubuntu:
 
 ```sh
 sudo apt-get update
-sudo apt-get install -y build-essential clang libclang-dev libfontconfig1-dev libfreetype6-dev ninja-build fontconfig fonts-roboto fonts-noto-color-emoji
+sudo apt-get install -y build-essential clang libclang-dev libfontconfig1-dev libfreetype6-dev ninja-build fontconfig fonts-roboto fonts-noto-core fonts-noto-color-emoji
 ```
 
 Then run:
