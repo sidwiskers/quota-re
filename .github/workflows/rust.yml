@@ -5,7 +5,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SKIA_NINJA_COMMAND: "ninja -j 2"
+  # The Skia build script treats this as one executable path, not a shell
+  # command string. The wrapper below enforces bounded Ninja parallelism.
+  SKIA_NINJA_COMMAND: /usr/local/bin/ninja-quota-re
 
 jobs:
   build:
@@ -21,6 +23,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends clang libclang-dev python3 libfontconfig1-dev libfreetype6-dev ninja-build fontconfig fonts-roboto fonts-noto-core fonts-noto-color-emoji
+          command -v ninja
+          ninja --version
+          sudo tee /usr/local/bin/ninja-quota-re >/dev/null <<'EOF'
+          #!/bin/sh
+          exec /usr/bin/ninja -j 2 "$@"
+          EOF
+          sudo chmod 0755 /usr/local/bin/ninja-quota-re
+          /usr/local/bin/ninja-quota-re --version
 
       - name: Build
         run: cargo build --verbose
