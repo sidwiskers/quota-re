@@ -77,7 +77,7 @@ impl BubbleLayout {
 
         if let Some((reply_username, reply_message)) = reply {
             has_reply = true;
-            reply_block_height = reply_font_size * 3.6;
+            reply_block_height = reply_font_size * 4.2;
 
             reply_name_paragraph = Some(font_mgr.build_paragraph(
                 reply_username,
