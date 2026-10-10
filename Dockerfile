@@ -4,6 +4,7 @@ FROM rust:bookworm AS builder
 # Dependencies required to compile Skia and its native text stack.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
+    libclang-dev \
     python3 \
     libfontconfig1-dev \
     libfreetype6-dev \
