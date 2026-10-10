@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     fontconfig \
     fonts-roboto \
+    fonts-noto-core \
     fonts-noto-color-emoji \
     libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
