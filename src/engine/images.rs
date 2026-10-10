@@ -1,4 +1,4 @@
-use skia_safe::{Canvas, Data, Image, Paint, Rect};
+use skia_safe::{Canvas, Data, Image, Paint, Rect, SrcRectConstraint};
 
 const MAX_ENCODED_IMAGE_BYTES: usize = 10 * 1024 * 1024;
 const MAX_IMAGE_SIDE: i32 = 8_192;
@@ -45,7 +45,7 @@ pub fn draw_cropped_image(canvas: &Canvas, image: &Image, destination: Rect, pai
     };
 
     let source = Rect::from_xywh(left, top, crop_width, crop_height);
-    canvas.draw_image_rect(image, Some(&source), destination, paint);
+    canvas.draw_image_rect(image, Some((&source, SrcRectConstraint::Strict)), destination, paint);
 }
 
 #[cfg(test)]
